@@ -7,10 +7,10 @@ from timescale_vector import client
 vec = VectorStore()
 
 # --------------------------------------------------------------
-# Shipping question
+# Product question
 # --------------------------------------------------------------
 
-relevant_question = "What are your shipping options?"
+relevant_question = "if i have low income, which 3 credit cards should i get?"
 results = vec.search(relevant_question, limit=3)
 
 response = Synthesizer.generate_response(question=relevant_question, context=results)
@@ -41,7 +41,7 @@ print(f"\nContext: {response.enough_context}")
 # Metadata filtering
 # --------------------------------------------------------------
 
-metadata_filter = {"category": "Shipping"}
+metadata_filter = {"entity": "visa"}
 
 results = vec.search(relevant_question, limit=3, metadata_filter=metadata_filter)
 

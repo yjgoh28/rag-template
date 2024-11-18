@@ -8,7 +8,7 @@ from timescale_vector.client import uuid_from_time
 vec = VectorStore()
 
 # Read the CSV file
-df = pd.read_csv("../data/faq_dataset.csv", sep=";")
+df = pd.read_csv("../data/all-outputs-fixed.csv", sep=",")
 
 
 # Prepare data for insertion
@@ -32,19 +32,32 @@ def prepare_record(row):
 
         This is useful when your content already has an associated datetime.
     """
-    content = f"Question: {row['question']}\nAnswer: {row['answer']}"
-    embedding = vec.get_embedding(content)
-    return pd.Series(
-        {
-            "id": str(uuid_from_time(datetime.now())),
-            "metadata": {
-                "category": row["category"],
-                "created_at": datetime.now().isoformat(),
-            },
-            "contents": content,
-            "embedding": embedding,
-        }
-    )
+    product_description = row["PRODUCT_DESCRIPTION"]
+    embedding = vec.get_embedding(product_description)
+    
+    # Helper function to handle NaN values
+    def clean_value(value):
+        return None if pd.isna(value) else value
+    
+    return pd.Series({
+        "id": str(uuid_from_time(datetime.now())),
+        "metadata": {
+            "product_id": row["PRODUCT_ID"],
+            "product_name": row["PRODUCT_NAME"],
+            "category": clean_value(row["PRODUCT_CATEGORY"]),
+            "entity": clean_value(row["ENTITY"]),
+            "card_type": clean_value(row["CARD_TYPE"]),  # Handle NaN
+            "is_liability": clean_value(row["IS_LIABILITY"]),
+            "is_investment": clean_value(row["IS_INVESTMENT"]),
+            "user_commission": clean_value(row["USER_COMMISSION"]),
+            "company_commission": clean_value(row["COMPANY_COMMISSION"]),
+            "product_highlights": clean_value(row["PRODUCT_HIGHLIGHTS_JSON"]),
+            "tags": clean_value(row["TAGS"]),
+            "created_at": datetime.now().isoformat(),
+        },
+        "content": product_description,
+        "embedding": embedding,
+    })
 
 
 records_df = df.apply(prepare_record, axis=1)
